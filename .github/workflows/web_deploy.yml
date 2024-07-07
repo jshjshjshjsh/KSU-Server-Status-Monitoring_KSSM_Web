@@ -25,13 +25,6 @@ jobs:
     # 프로젝트 압축
     - name: Checkout repository
       uses: actions/checkout@v2
-    
-    - name: Install AWS CLI
-      run: |
-        sudo apt-get install awscli
-        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws configure set region ap-northeast-2
         
     # AWS 권한 확인
     - name: Configure AWS credentials
@@ -40,6 +33,7 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-northeast-2
+        
     # 압축한 프로젝트를 S3로 전송
     - name: Upload to S3
       run: |
