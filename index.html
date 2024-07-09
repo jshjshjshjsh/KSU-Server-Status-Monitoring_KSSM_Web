@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Title</title>
+    <title>경성대 건강 상태는?</title>
+    <link rel="icon" href="./favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="css/main.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,64 +14,20 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 </head>
 <body>
-<style>
-    .main{
-        width:960px;
-        margin: auto auto;
-    }
-
-    .wrap-chart{
-        width: 720px;
-        height: 360px;
-        margin: auto auto;
-    }
-
-    #myChart {
-        width: 100%; /* 차트를 부모 요소의 100% 너비로 설정 */
-        height: auto; /* 높이는 자동으로 조정되도록 설정 */
-        max-width: 600px; /* 최대 너비 설정 */
-        margin: auto auto;
-    }
-
-
-    @media (max-width: 599px) {
-        .main{
-            width:100%;
-            margin: auto auto;
-        }
-
-        .tmp{
-            width:360px;
-            overflow: hidden;
-        }
-
-        .wrap-chart{
-            width: 720px;
-            height: 360px;
-        }
-
-        #myChart {
-            margin-top: 400px;
-            width: 720px !important;
-            height: 360px !important;
-            max-width: none;
-            transform-origin: top center;
-            transform: rotate(90deg);
-        }
-    }
-</style>
 <div class="main">
     <div id="data"></div>
     <div id="chartData" data-labels-homepage="" data-labels-portal="" data-values-homepage="" data-values-portal=""></div>
 
-    <div class="tmp">
-    <div class="wrap-chart">
-        <canvas id="myChart"></canvas>
-    </div></div>
+    <div class="card-block">응답속도 현황</div>
+    <div class="chart-block">
+        <div class="wrap-chart">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
 </div>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getFirestore, collection, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getFirestore, collection, query, where, orderBy, limit, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDDkqQ6qdmtzC37AcsHAr3eMN3Ow_A5A_Q",
@@ -85,57 +43,63 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function fetchData() {
-        try {
-            const qHomepage = query(
-                collection(db, "KSSM_NODE"),
-                where("type", "==", "homepage"),
-                orderBy("measured_time", "desc"),
-                limit(24)
-            );
-            const querySnapshotHomepage = await getDocs(qHomepage);
-            const labelsHomepage = [];
-            const dataHomepage = [];
+    function fetchDataAndDrawChart() {
+        const qHomepage = query(
+            collection(db, "KSSM_NODE"),
+            where("type", "==", "homepage"),
+            orderBy("measured_time", "desc"),
+            limit(24)
+        );
+        const qPortal = query(
+            collection(db, "KSSM_NODE"),
+            where("type", "==", "portal"),
+            orderBy("measured_time", "desc"),
+            limit(24)
+        );
+
+        const labelsHomepage = [];
+        const dataHomepage = [];
+        const dataPortal = [];
+
+        const fetchHomepageData = getDocs(qHomepage).then((querySnapshotHomepage) => {
             querySnapshotHomepage.forEach((doc) => {
                 const docData = doc.data();
                 labelsHomepage.push(docData.measured_time.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
                 dataHomepage.push(docData.required_time);
             });
+        });
 
-            const qPortal = query(
-                collection(db, "KSSM_NODE"),
-                where("type", "==", "portal"),
-                orderBy("measured_time", "desc"),
-                limit(24)
-            );
-            const querySnapshotPortal = await getDocs(qPortal);
-            const labelsPortal = [];
-            const dataPortal = [];
+        const fetchPortalData = getDocs(qPortal).then((querySnapshotPortal) => {
             querySnapshotPortal.forEach((doc) => {
                 const docData = doc.data();
                 dataPortal.push(docData.required_time);
             });
+        });
 
+        Promise.all([fetchHomepageData, fetchPortalData]).then(() => {
             const chartDataDiv = document.getElementById("chartData");
             chartDataDiv.setAttribute('data-labels-homepage', JSON.stringify(labelsHomepage.reverse()));
-            chartDataDiv.setAttribute('data-labels-portal', JSON.stringify(labelsPortal.reverse()));
+            //chartDataDiv.setAttribute('data-labels-portal', JSON.stringify(labelsPortal.reverse()));
             chartDataDiv.setAttribute('data-values-homepage', JSON.stringify(dataHomepage.reverse()));
             chartDataDiv.setAttribute('data-values-portal', JSON.stringify(dataPortal.reverse()));
-
             drawChart();
-        } catch (error) {
-            console.error("Error fetching data: ", error);
-        }
+        });
     }
 
-    window.onload = fetchData;
+    fetchDataAndDrawChart(); // 초기 데이터를 가져와서 차트를 그립니다.
+
+    // Firestore의 변경사항을 실시간으로 수신하여 차트를 업데이트합니다.
+    onSnapshot(query(collection(db, "KSSM_NODE"), where("type", "in", ["homepage", "portal"]), orderBy("measured_time", "desc"), limit(24)), (snapshot) => {
+        fetchDataAndDrawChart();
+    });
+
 </script>
 <script>
     let chart;
     function drawChart() {
         const chartDataDiv = document.getElementById("chartData");
         const labelHomepage = JSON.parse(chartDataDiv.getAttribute('data-labels-homepage'));
-        const labelPortal = JSON.parse(chartDataDiv.getAttribute('data-labels-portal'));
+        //const labelPortal = JSON.parse(chartDataDiv.getAttribute('data-labels-portal'));
         const dataHomepage = JSON.parse(chartDataDiv.getAttribute('data-values-homepage'));
         const dataPortal = JSON.parse(chartDataDiv.getAttribute('data-values-portal'));
 
