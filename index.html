@@ -18,12 +18,48 @@
     <div id="data"></div>
     <div id="chartData" data-labels-homepage="" data-labels-portal="" data-values-homepage="" data-values-portal=""></div>
 
-    <div class="card-block">응답속도 현황</div>
-    <div class="chart-block">
-        <div class="wrap-chart">
-            <canvas id="myChart"></canvas>
+    <div class="wrap-card-chart">
+        <div class="card-block">응답속도 현황</div>
+        <div class="chart-block">
+            <div class="wrap-chart">
+                <canvas id="myChart"></canvas>
+            </div>
         </div>
     </div>
+
+    <div class="info-block">
+        <div class="wrap-btn-status-check">
+            <!-- 여기 ajax로 처리-->
+            <button class='btn-status-check' href="https://m1b7vp50cc.execute-api.ap-northeast-2.amazonaws.com/kssm_status_check/status">👉 지금 홈페이지/포탈 상태 점검 요청하기</button>
+
+            <a href="https://kscms.ks.ac.kr">👉 홈페이지 확인하러 가기</a>
+            <a href="https://portal.ks.ac.kr">👉 포탈 확인하러 가기</a>
+        </div>
+        <br>
+        <div>
+            <table class="table">
+                <tbody>
+                <tr><th style="border-right:none"></th><td></td></tr>
+                <tr>
+                    <th scope="row">어떤 사이트인가요🤔</th>
+                    <td>경성대학교 <red>홈페이지</red>와 <red>포탈</red>의 접속 상태를 보여주는 웹사이트에요</td>
+                </tr>
+                <tr>
+                    <th scope="row">어떻게 체크하나요🤨</th>
+                    <td><red>15분</red> 간격으로 둘의 상태를 체크해요</td>
+                </tr>
+                <tr>
+                    <th scope="row" rowspan="2">어떻게 사용하나요🤨</th>
+                    <td>지금 당장의 상태를 확인하고 싶으면 <red>점검요청하기</red> 버튼을 클릭해 주세요</td>
+                </tr>
+                <tr>
+                    <td>직접 상태를 확인하고 싶다면 <red>확인하러가기</red> 링크를 클릭해 주세요</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
